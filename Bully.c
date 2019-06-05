@@ -15,7 +15,7 @@
 #include <string.h>     /* for memset() */
 
 //DEFINES
-#define THREADS_NUMBER 10
+#define THREADS_NUMBER 3
 #define BROADCAST_IP "127.0.0.1"
 #define BROADCAST_PORT "6000"
 #define MAX_SLEEP 3
@@ -51,7 +51,7 @@ void sendMessage(char* message)
 //Receive a message
 char* receiveMessage()
 {
-	char recvString[MAXRECVSTRING+1]; /* Buffer for received string */
+	char* recvString = (char*) malloc (sizeof(char) * (MAXRECVSTRING + 1)); /* Buffer for received string */
     int recvStringLen;                /* Length of received string */
 
     /* Receive a single datagram from the server */
@@ -59,7 +59,7 @@ char* receiveMessage()
         DieWithError("recvfrom() failed");
 
     recvString[recvStringLen] = '\0';
-    printf("Received: %s\n", recvString);    /* Print the received string */
+    //printf("Received: %s\n", recvString);    /* Print the received string */
 
     return recvString;
 }
@@ -101,7 +101,13 @@ void openSocket(char* ip, unsigned short port, struct sockaddr_in* broadcastAddr
 void *myThreadFun(void *vargp) 
 { 
 	//ID
-	unsigned id = *(unsigned*)vargp;
+	int id = (int) *(unsigned*)vargp;
+
+	char message [250] = "Hello from ";
+	char id_char [5];
+	sprintf(id_char, "%d", id);
+	strcat(message, id_char);
+	char* receivMessage = NULL;
 
 	//Initial sleep
 	sleep(1);
@@ -115,10 +121,15 @@ void *myThreadFun(void *vargp)
 	{
 		printf("Thread ID %d: time = %d\n", id ,clock);
 
-		sendMessage ("Hello from " + id);
+
+		sendMessage (message);
 		//Increment
 
-		printf("Received: %s\n", receiveMessage());
+		receivMessage = receiveMessage();
+
+		printf("Thread %d received: %s\n", id, receivMessage);
+
+		free(receivMessage);
 
 		sleep(sleep_time);
 	}
